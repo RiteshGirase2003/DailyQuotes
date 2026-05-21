@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Flip Quote Cards</title>
+
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at top, #1e293b, #0f172a);
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  /* ✅ FIX 1: full width safety container */
+  .scene {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1200px;
+    overflow: hidden;
+  }
+
+  /* ✅ FIX 2: absolute safe fixed card size */
+  .card {
+    width: 320px;
+    max-width: 92vw;
+    height: 440px;
+    position: relative;
+
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease, opacity 0.25s ease;
+
+    transform-origin: center;
+  }
+
+  .face {
+    position: absolute;
+    inset: 0;
+
+    border-radius: 22px;
+    backface-visibility: hidden;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 24px;
+    text-align: center;
+
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+
+    box-sizing: border-box; /* ✅ FIX 3 */
+  }
+
+  .front {
+    background: #1e293b;
+    color: white;
+  }
+
+  .back {
+    background: #0f172a;
+    color: #fbbf24;
+    transform: rotateY(180deg);
+  }
+
+  .text {
+    font-size: 18px;
+    line-height: 1.5;
+    max-width: 100%;
+  }
+
+  .author {
+    margin-top: 14px;
+    font-size: 13px;
+    opacity: 0.7;
+    color: #94a3b8;
+  }
+
+  .hint {
+    position: absolute;
+    bottom: 14px;
+    font-size: 10px;
+    opacity: 0.4;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="scene">
+  <div class="card" id="card">
+
+    <div class="face front">
+      <div class="text" id="quoteText"></div>
+      <div class="author" id="quoteAuthor"></div>
+    </div>
+
+    <div class="face back">
+      <div class="text" id="meaningText"></div>
+      <div class="author" id="meaningAuthor"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const data = [
+  {"quote": "Life is hard, we deserve our small celebrations", "meaning": "Celebrate small wins", "said_by": "Unknown"},
+  {"quote": "Stay hungry, stay foolish", "meaning": "Keep learning and taking risks", "said_by": "Steve Jobs"},
+  {"quote": "All that glitters is not gold", "meaning": "Looks can be deceiving", "said_by": "William Shakespeare"},
+  {"quote": "Eighty percent of success is showing up", "meaning": "Just being there helps", "said_by": "Woody Allen"},
+  {"quote": "Frankly, my dear, I don't give a damn", "meaning": "I don’t care", "said_by": "Rhett Butler (Gone with the Wind)"},
+  {"quote": "Genius is one percent inspiration and ninety-nine percent perspiration", "meaning": "Hard work beats talent", "said_by": "Thomas Edison"},
+  {"quote": "Go ahead, make my day", "meaning": "Challenge me", "said_by": "Clint Eastwood (Dirty Harry)"},
+  {"quote": "He travels the fastest who travels alone", "meaning": "Solo effort is quicker", "said_by": "Unknown"},
+  {"quote": "I think therefore I am", "meaning": "Thinking proves I exist", "said_by": "René Descartes"},
+  {"quote": "If at first you don’t succeed, try, try again", "meaning": "Keep trying", "said_by": "Unknown"},
+  {"quote": "If you are going through hell, keep going", "meaning": "Don’t give up", "said_by": "Winston Churchill"},
+  {"quote": "If you build it, they will come", "meaning": "Create and people will come", "said_by": "Field of Dreams (movie)"},
+  {"quote": "If you want something done right, do it yourself", "meaning": "Do it yourself for best results", "said_by": "Unknown"},
+  {"quote": "I'll be back", "meaning": "I’ll return", "said_by": "Arnold Schwarzenegger (The Terminator)"},
+  {"quote": "I've got a feeling we're not in Kansas anymore", "meaning": "Things have changed", "said_by": "Dorothy (The Wizard of Oz)"},
+  {"quote": "Keep your friends close, but your enemies closer", "meaning": "Watch your enemies carefully", "said_by": "Michael Corleone (The Godfather)"},
+  {"quote": "Knowledge is power", "meaning": "Knowing is strength", "said_by": "Francis Bacon"},
+  {"quote": "May the Force be with you", "meaning": "Good luck", "said_by": "Star Wars"},
+  {"quote": "No one can make you feel inferior without your consent", "meaning": "Don’t let others control you", "said_by": "Eleanor Roosevelt"},
+  {"quote": "Not all those who wander are lost", "meaning": "Exploration doesn’t mean lost", "said_by": "J.R.R. Tolkien"},
+  {"quote": "Nothing is certain except for death and taxes", "meaning": "Only death and taxes are sure", "said_by": "Benjamin Franklin"},
+  {"quote": "Parting is such sweet sorrow", "meaning": "Goodbye is both sad and sweet", "said_by": "William Shakespeare"},
+  {"quote": "Power corrupts; absolute power corrupts absolutely", "meaning": "Power leads to corruption", "said_by": "Lord Acton"},
+  {"quote": "Speak softly and carry a big stick", "meaning": "Be calm, but ready", "said_by": "Theodore Roosevelt"},
+  {"quote": "That’s one small step for a man, a giant leap for mankind", "meaning": "Small actions have big results", "said_by": "Neil Armstrong"},
+  {"quote": "The only thing we have to fear is fear itself", "meaning": "Fear is the real enemy", "said_by": "Franklin D. Roosevelt"},
+  {"quote": "Three can keep a secret, if two of them are dead", "meaning": "Secrets are hard to keep", "said_by": "Benjamin Franklin"},
+  {"quote": "Tis better to have loved and lost than never to have loved at all", "meaning": "Love is worth the risk", "said_by": "Alfred Lord Tennyson"},
+  {"quote": "To be or not to be, that is the question", "meaning": "Questioning life", "said_by": "William Shakespeare"},
+  {"quote": "To err is human; to forgive, divine", "meaning": "Mistakes are human; forgiving is noble", "said_by": "Alexander Pope"},
+  {"quote": "To thine own self, be true", "meaning": "Be true to yourself", "said_by": "William Shakespeare"},
+  {"quote": "Making mistakes is human nature, admitting mistakes is culture, and correcting mistakes is progress", "meaning": "Admit mistakes and fix them", "said_by": "Unknown"},
+  {"quote": "Two roads diverged in a wood, and I, I took the one less travelled by, and that has made all the difference", "meaning": "Choose a unique path", "said_by": "Robert Frost"},
+  {"quote": "What doesn't kill us makes us stronger", "meaning": "Challenges make us stronger", "said_by": "Friedrich Nietzsche"},
+  {"quote": "What we've got here is failure to communicate. Some men you just can't reach", "meaning": "Some people can’t be reached", "said_by": "Cool Hand Luke (movie)"},
+  {"quote": "Whatever you are, be a good one", "meaning": "Do your best", "said_by": "Abraham Lincoln"},
+  {"quote": "You can fool all of the people some of the time, and some of the people all of the time, but you can't fool all of the people all of the time", "meaning": "Lies don’t last", "said_by": "Abraham Lincoln"},
+  {"quote": "You must be the change you wish to see in the world", "meaning": "Be the change", "said_by": "Mahatma Gandhi"},
+  {"quote": "You talkin' to me?", "meaning": "Confronting someone", "said_by": "Robert De Niro (Taxi Driver)"},
+  
+  {"quote": "The two most important days in your life are the day you are born... and the day you find out why.", "meaning": "Life's purpose matters", "said_by": "Mark Twain"},
+  {"quote": "Death is not the greatest loss in life. The greatest loss is what dies inside us while we live.", "meaning": "Losing passion is worse than dying", "said_by": "Norman Cousins"},
+  {"quote": "You don’t have to become something you’re not to be better than you were.", "meaning": "Be yourself to improve", "said_by": "Sidney Poitier"},
+  {"quote": "Knowing others is intelligence; knowing yourself is true wisdom. Mastering others is strength; mastering yourself is true power.", "meaning": "Self-awareness is power", "said_by": "Laozi"},
+  {"quote": "Too many people spend money they earned to buy things they don’t want to impress people that they don’t like.", "meaning": "Stop impressing others", "said_by": "Will Rogers"},
+  {"quote": "Everything in nature invites us constantly to be what we are.", "meaning": "Be true to your nature", "said_by": "Gretel Ehrlich"},
+  {"quote": "The place to find who you are is where you stand.", "meaning": "Be where you are", "said_by": "George Mumford"},
+  {"quote": "If you want more time, freedom, and energy, start saying no.", "meaning": "Learn to say no", "said_by": "Unknown"},
+  {"quote": "If a window of opportunity appears, don’t pull down the shade.", "meaning": "Seize the opportunity", "said_by": "Tom Peters"},
+  {"quote": "I am here today to cross the swamp, not to fight all the alligators.", "meaning": "Focus on your main goal", "said_by": "Rosamund and Benjamin Zander"},
+  {"quote": "I think a singular identity isn’t very interesting, and I’m a little bit more multifaceted as a person than that.", "meaning": "Embrace all sides of you", "said_by": "Catherine Opie"},
+  {"quote": "A nail is driven out by another nail. Habit is overcome by habit.", "meaning": "Replace bad habits with good ones", "said_by": "Erasmus"},
+  {"quote": "Chains of habit are too light to be felt until they are too heavy to be broken.", "meaning": "Habits become hard to change", "said_by": "Warren Buffett"},
+  {"quote": "A year from now you may wish you had started today.", "meaning": "Start now, not later", "said_by": "Karen Lamb"},
+  {"quote": "Self-discipline is doing what’s right instead of doing what you feel like doing.", "meaning": "Discipline is choosing what's right", "said_by": "Eliud Kipchoge"},
+  {"quote": "We want to be great at the things that happen a lot.", "meaning": "Focus on frequent actions", "said_by": "Unknown"},
+  {"quote": "We don’t rise to the level of our expectations, we fall to the level of our training.", "meaning": "Training sets your limits", "said_by": "Archilochus"},
+  {"quote": "Don’t dream of winning, train for it!", "meaning": "Training makes success", "said_by": "Mo Farah"},
+  {"quote": "Every action you take is a vote for the type of person you wish to become.", "meaning": "Your actions shape you", "said_by": "James Clear"},
+  {"quote": "The quality of our life on planet earth depends on the choices we make every day.", "meaning": "Choices define our life", "said_by": "BJ Fogg"},
+  {"quote": "I didn’t get there by wishing for it or hoping for it, but by working for it.", "meaning": "Work for your dreams", "said_by": "Estée Lauder"},
+  {"quote": "More work than you want, less than you fear.", "meaning": "Work isn't as bad as you think", "said_by": "Coach Tony"},
+  {"quote": "Sometimes, magic is just someone spending more time on something than anyone else might reasonably expect.", "meaning": "Effort creates magic", "said_by": "Teller"},
+  {"quote": "What gets measured gets done, what gets measured and fed back gets done well, what gets rewarded gets repeated.", "meaning": "Feedback and reward improve work", "said_by": "Unknown"},
+  {"quote": "You are not responsible for your first thought, but you are responsible for your second thought.", "meaning": "Control your reactions", "said_by": "Raquel Smith"},
+  {"quote": "Good advice helps you find the solution to your problem. Great advice helps you find you were solving the wrong problem.", "meaning": "Great advice shows the bigger issue", "said_by": "Merlin Mann"},
+  {"quote": "My definition of being properly educated is being right when the professor is wrong.", "meaning": "Think for yourself", "said_by": "Charlie Munger"},
+  {"quote": "There is no end to education. It is not that you read a book, pass an examination, and finish with education.", "meaning": "Education is lifelong", "said_by": "Jiddu Krishnamurti"},
+  {"quote": "The reading of all good books is like a conversation with the finest minds of past centuries.", "meaning": "Books connect us to great minds", "said_by": "René Descartes"},
+  {"quote": "Process life as it is, not as you want it to be.", "meaning": "Accept life as it is", "said_by": "Unknown"},
+  {"quote": "Failure I can live with. Not trying is what I can’t handle.", "meaning": "Trying is better than not trying", "said_by": "Sanya Richards-Ross"},
+  {"quote": "The most dangerous distractions are the ones you love, but that don’t love you back.", "meaning": "Beware of distractions", "said_by": "Warren Buffet"},
+  {"quote": "Write. Write. Write. Learn how to revise. No story is perfect straight from the keyboard.", "meaning": "Keep writing and improving", "said_by": "Carol Berg"},
+  {"quote": "If you get tired, learn to rest, not to quit.", "meaning": "Rest, don’t quit", "said_by": "Banksy"},
+  {"quote": "The question isn't who is going to let me; it's who is going to stop me.", "meaning": "I won’t be stopped", "said_by": "Ayn Rand"},
+  {"quote": "Winning is not a sometime thing; it's an all the time thing.", "meaning": "Winning is constant", "said_by": "Vince Lombardi"},
+  {"quote": "You miss 100% of the shots you don't take.", "meaning": "You can’t succeed if you don’t try", "said_by": "Wayne Gretzky"},
+  {"quote": "I alone cannot change the world, but I can cast a stone across the water to create many ripples.", "meaning": "Small actions can create big changes", "said_by": "Mother Teresa"},
+  {"quote": "You become what you believe.", "meaning": "Your beliefs shape you", "said_by": "Oprah Winfrey"},
+  {"quote": "The unexamined life is not worth living.", "meaning": "Reflect on life to live fully", "said_by": "Socrates"},
+  {"quote": "Dream big and dare to fail.", "meaning": "Take risks and dream big", "said_by": "Norman Vaughan"},
+  {"quote": "You may be disappointed if you fail, but you are doomed if you don't try.", "meaning": "Not trying is worse than failing", "said_by": "Beverly Sills"},
+  {"quote": "It does not matter how slowly you go as long as you do not stop.", "meaning": "Keep going, no matter the pace", "said_by": "Confucius"},
+  {"quote": "Hardships often prepare ordinary people for an extraordinary destiny.", "meaning": "Challenges prepare you for greatness", "said_by": "C.S. Lewis"},
+  {"quote": "I didn't fail the test. I just found 100 ways to do it wrong.", "meaning": "Failure is part of learning", "said_by": "Benjamin Franklin"},
+  {"quote": "If you're offered a seat on a rocket ship, don't ask what seat! Just get on.", "meaning": "Take the opportunity without hesitation", "said_by": "Sheryl Sandberg"},
+  {"quote": "I attribute my success to this: I never gave or took any excuse.", "meaning": "Success comes from responsibility, not excuses", "said_by": "Florence Nightingale"},
+  {"quote": "Life is 10% what happens to me and 90% of how I react to it.", "meaning": "Your reactions matter more than what happens", "said_by": "Charles Swindoll"},
+  {"quote": "You will face many defeats in life, but never let yourself be defeated.", "meaning": "Don’t let setbacks stop you", "said_by": "Maya Angelou"},
+  {"quote": "The only impossible journey is the one you never begin.", "meaning": "Start your journey, don’t fear failure", "said_by": "Tony Robbins"},
+  {"quote": "You only live once, but if you do it right, once is enough.", "meaning": "Live life well, not just long", "said_by": "Mae West"},
+  {"quote": "Live in the sunshine, swim the sea, drink the wild air.", "meaning": "Embrace life fully", "said_by": "Ralph Waldo Emerson"},
+  {"quote": "The secret of success is to do the common thing uncommonly well.", "meaning": "Excel at the basics", "said_by": "John D. Rockefeller"},
+  {"quote": "I find that the harder I work, the more luck I seem to have.", "meaning": "Hard work brings luck", "said_by": "Thomas Jefferson"},
+  {"quote": "Success is not final, failure is not fatal: It is the courage to continue that counts.", "meaning": "Keep going despite success or failure", "said_by": "Winston Churchill"},
+  {"quote": "The way to get started is to quit talking and begin doing.", "meaning": "Start working, stop talking", "said_by": "Walt Disney"},
+  {"quote": "Success usually comes to those who are too busy to be looking for it.", "meaning": "Focus on work, not success", "said_by": "Henry David Thoreau"},
+  {"quote": "Success seems to be connected with action. Successful people keep moving. They make mistakes but they don't quit.", "meaning": "Keep going, even with mistakes", "said_by": "Conrad Hilton"},
+  {"quote": "There are no secrets to success. It is the result of preparation, hard work and learning from failure.", "meaning": "Success is earned, not secret", "said_by": "Colin Powell"},
+  {"quote": "The only limit to our realization of tomorrow will be our doubts of today.", "meaning": "Don’t doubt your future", "said_by": "Franklin D. Roosevelt"},
+  {"quote": "It is better to fail in originality than to succeed in imitation.", "meaning": "Be original, even if you fail", "said_by": "Herman Melville"},
+  {"quote": "Successful people do what unsuccessful people are not willing to do. Don't wish it were easier; wish you were better.", "meaning": "Success requires effort", "said_by": "Jim Rohn"},
+  {"quote": "The road to success and the road to failure are almost exactly the same.", "meaning": "Success and failure require the same effort", "said_by": "Colin R. Davis"},
+  {"quote": "I failed my way to success.", "meaning": "Failure leads to success", "said_by": "Thomas Edison"},
+  {"quote": "If you set your goals ridiculously high and it's a failure, you will fail above everyone else's success.", "meaning": "Aim high, even if you fail", "said_by": "James Cameron"},
+  {"quote": "If you really look closely, most overnight successes took a long time.", "meaning": "Success takes time", "said_by": "Steve Jobs"},
+  {"quote": "Things work out best for those who make the best of how things work out.", "meaning": "Make the best of situations", "said_by": "John Wooden"},
+  {"quote": "Always bear in mind that your own resolution to success is more important than any other one thing.", "meaning": "Your determination is key", "said_by": "Abraham Lincoln"},
+  {"quote": "Success is walking from failure to failure with no loss of enthusiasm.", "meaning": "Stay positive through setbacks", "said_by": "Winston Churchill"},
+  {"quote": "If you genuinely want something, don't wait for it—teach yourself to be impatient.", "meaning": "Act now to achieve your goals", "said_by": "Gurbaksh Chahal"},
+  {"quote": "The only place where success comes before work is in the dictionary.", "meaning": "Work comes before success", "said_by": "Vidal Sassoon"},
+  {"quote": "If you are not willing to risk the usual, you will have to settle for the ordinary.", "meaning": "Risk is necessary for greatness", "said_by": "Jim Rohn"},
+  {"quote": "Before anything else, preparation is the key to success.", "meaning": "Preparation is essential", "said_by": "Alexander Graham Bell"},
+  {"quote": "You never achieve real success unless you like what you're doing.", "meaning": "Passion leads to success", "said_by": "Dale Carnegie"},
+  {"quote": "The successful warrior is the average man, with laser-like focus.", "meaning": "Focus is key to success", "said_by": "Bruce Lee"},
+  {"quote": "It's fun to do the impossible.", "meaning": "Challenge yourself", "said_by": "Walt Disney"},
+  {"quote": "Quality is never an accident. It is always the result of intelligent effort.", "meaning": "Quality comes from effort", "said_by": "John Ruskin"},
+  {"quote": "Hard work beats talent when talent doesn't work hard.", "meaning": "Work hard, even if you're talented", "said_by": "Tim Notke"},
+
+  {"quote": "Discipline beats motivation when motivation fades", "meaning": "Consistency wins long-term success", "said_by": "Unknown"},
+  {"quote": "You don’t rise to the level of your goals, you fall to the level of your systems", "meaning": "Systems decide success", "said_by": "James Clear"},
+  {"quote": "Work in silence, let success make the noise", "meaning": "Focus on execution, not attention", "said_by": "Unknown"},
+  {"quote": "Comfort is the enemy of progress", "meaning": "Growth requires discomfort", "said_by": "Unknown"},
+  {"quote": "Hard choices, easy life. Easy choices, hard life", "meaning": "Discipline today avoids struggle tomorrow", "said_by": "Jerzy Gregorek"},
+  {"quote": "If you want extraordinary results, stop doing what everyone else is doing", "meaning": "Success requires separation from the crowd", "said_by": "Unknown"},
+  {"quote": "Ambition without action is fantasy", "meaning": "Dreams need execution", "said_by": "Unknown"},
+  {"quote": "Your future is created by what you do today, not tomorrow", "meaning": "Action now shapes outcomes", "said_by": "Robert Kiyosaki"},
+  {"quote": "Don’t wish it was easier, wish you were better", "meaning": "Improve yourself instead of avoiding difficulty", "said_by": "Jim Rohn"},
+  {"quote": "Pressure creates diamonds", "meaning": "Struggle builds strength and success", "said_by": "Unknown"},
+  {"quote": "A man is built by the weight he refuses to drop", "meaning": "Responsibility builds character", "said_by": "Unknown"},
+  {"quote": "Chase skills, not comfort", "meaning": "Prioritize growth over ease", "said_by": "Unknown"},
+  {"quote": "The grind you avoid today becomes the regret you face tomorrow", "meaning": "Avoiding work leads to future regret", "said_by": "Unknown"},
+  {"quote": "Execution is the bridge between dreams and reality", "meaning": "Action turns ideas into results", "said_by": "Unknown"},
+  {"quote": "Small daily improvements lead to massive long-term results", "meaning": "Consistency compounds over time", "said_by": "Unknown"},
+  {"quote": "No one is coming to save you. Build yourself", "meaning": "Self-reliance is essential for success", "said_by": "Unknown"},
+  {"quote": "Skill is earned in silence, rewarded in public", "meaning": "Hard work happens privately, results show publicly", "said_by": "Unknown"},
+  {"quote": "Be dangerous in your discipline, not your distractions", "meaning": "Focus energy on productive habits", "said_by": "Unknown"},
+  {"quote": "You either suffer the pain of discipline or the pain of regret", "meaning": "One form of pain is unavoidable", "said_by": "Jim Rohn"},
+  {"quote": "Greatness is built when no one is watching", "meaning": "Private effort creates public success", "said_by": "Unknown"}
+];
+
+let index = 0;
+let flipped = false;
+
+const card = document.getElementById("card");
+const quoteText = document.getElementById("quoteText");
+const quoteAuthor = document.getElementById("quoteAuthor");
+const meaningText = document.getElementById("meaningText");
+const meaningAuthor = document.getElementById("meaningAuthor");
+
+function render() {
+  const item = data[index];
+  quoteText.textContent = item.quote;
+  meaningText.textContent = item.meaning;
+  quoteAuthor.textContent = "— " + item.said_by;
+  meaningAuthor.textContent = "Meaning";
+}
+
+render();
+
+/* flip */
+function flipLeft() {
+  flipped = !flipped;
+  card.style.transform = flipped ? "rotateY(-180deg)" : "rotateY(0deg)";
+}
+
+function flipRight() {
+  flipped = !flipped;
+  card.style.transform = flipped ? "rotateY(180deg)" : "rotateY(0deg)";
+}
+
+/* next */
+function nextCard() {
+  card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
+
+  card.style.transform = "scale(0.85)";
+  card.style.opacity = "0";
+
+  setTimeout(() => {
+    index = Math.floor(Math.random() * data.length);
+    flipped = false;
+
+    render();
+
+    card.style.transform = "rotateY(0deg) scale(1)";
+    card.style.opacity = "1";
+  }, 200);
+}
+
+/* swipe */
+let startX = 0;
+let startY = 0;
+
+card.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+
+card.addEventListener("touchend", (e) => {
+  let dx = e.changedTouches[0].clientX - startX;
+  let dy = e.changedTouches[0].clientY - startY;
+  handleSwipe(dx, dy);
+});
+
+card.addEventListener("mousedown", (e) => {
+  startX = e.clientX;
+  startY = e.clientY;
+});
+
+document.addEventListener("mouseup", (e) => {
+  let dx = e.clientX - startX;
+  let dy = e.clientY - startY;
+  handleSwipe(dx, dy);
+});
+
+function handleSwipe(dx, dy) {
+  const threshold = 60;
+
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (Math.abs(dx) > threshold) {
+      dx < 0 ? flipLeft() : flipRight();
+    }
+  } else {
+    if (Math.abs(dy) > threshold) {
+      nextCard();
+    }
+  }
+}
+</script>
+
+</body>
+</html>
